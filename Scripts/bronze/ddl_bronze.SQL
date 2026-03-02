@@ -39,6 +39,8 @@ cst_gndr nvarchar(50),
 cst_create_date Date
 );
 
+IF OBJECT_ID ('bronze.crm_sales_details', 'U') is not null 
+	DROP Table bronze.crm_sales_details;
 create table bronze.crm_sales_details
 (
 sls_ord_num int,
@@ -52,6 +54,8 @@ sls_quantity int,
 sls_price int
 )
 
+IF OBJECT_ID ('bronze.crm_prd_info ', 'U') is not null 
+	DROP Table bronze.crm_prd_info;
 create table bronze.crm_prd_info 
 (
 prd_id int, 
@@ -63,6 +67,8 @@ prd_start_dt datetime,
 prd_end_dt datetime
 );
 
+IF OBJECT_ID ('bronze.erp_CUST_AZ12 ', 'U') is not null 
+	DROP Table bronze.erp_CUST_AZ12 ;
 create table bronze.erp_CUST_AZ12
 (
 CID nvarchar(50),
@@ -70,12 +76,16 @@ BDATE datetime,
 Gen nvarchar(50)
 )
 
+IF OBJECT_ID ('bronze.erp_LOC_A101 ', 'U') is not null 
+	DROP Table bronze.erp_LOC_A101;
 create table bronze.erp_LOC_A101
 (
 CID nvarchar(50),
 CNTRY nvarchar(50)
 )
 
+IF OBJECT_ID ('bronze.erp_PX_CAT_G1V2 ', 'U') is not null 
+	DROP Table bronze.erp_PX_CAT_G1V2;
 create table bronze.erp_PX_CAT_G1V2
 (
 ID nvarchar(50),
@@ -83,6 +93,7 @@ CAT nvarchar(50),
 SUBCAT nvarchar(50),
 MAINTENANCE NVARCHAR (50)
 )
+
 
 create or alter procedure bronze.load_bronze
 as begin 
@@ -98,7 +109,8 @@ as begin
 		print '---------------------------------------------------';
 
 
-
+		-- Table 1: crm_cust_info
+		print '>> [1/6] Loading: bronze.crm_cust_info'
 		set @start_time = getdate()
 		Truncate table bronze.crm_cust_info; --making table empty
 		BULK INSERT bronze.crm_cust_info --inserting 
@@ -109,13 +121,12 @@ as begin
 		Tablock -- will lock the whole table while loading
 		);
 		set @end_time = GETDATE()
-		print '>> Load duration: ' + cast(datediff(second,@start_time, @end_time) as nvarchar) + 'seconds';
-
-		select * from bronze.crm_cust_info
-		select count(*) as Columns_Count from bronze.crm_cust_info
+		print '   Status   : SUCCESS'
+		print '   Load duration: ' + cast(datediff(second,@start_time, @end_time) as nvarchar) + 'seconds';
 		---------------------------------------------------------------------------
 
-
+		-- Table 2: crm_prd_info
+		print '>> [2/6] Loading: bronze.crm_prd_info'
 		set @start_time = getdate()
 		Truncate table bronze.crm_prd_info;
 		Bulk insert bronze.crm_prd_info
@@ -125,10 +136,13 @@ as begin
 		fieldterminator = ',',
 		tablock);
 		set @end_time = getdate()
-		print '>> Load duration: ' + cast(datediff(second,@start_time,@end_time) as nvarchar) + 'seconds';
-		select count(*) as columns_count from bronze.crm_prd_info 
+		print '   Status    : SUCCESS'
+		print '   Load duration: ' + cast(datediff(second,@start_time,@end_time) as nvarchar) + 'seconds';
 		---------------------------------------------------------------------------------
 
+		-- Table 3: crm_sales_details
+		print '>> [3/6] Loading: bronze.crm_sales_details'
+		set @start_time = getdate()
 		Truncate table bronze.crm_sales_details;
 		Bulk insert bronze.crm_sales_details
 		from 'C:\Users\Cyber\Downloads\dbc9660c89a3480fa5eb9bae464d6c07\sql-data-warehouse-project\datasets\source_crm\sales_details.csv'
@@ -136,14 +150,17 @@ as begin
 		Firstrow = 2,
 		fieldterminator = ',',
 		tablock);
-		select count(*) as  columns_count from bronze.crm_sales_details
-
+		set @end_time = getdate()
+		print '   Status    : SUCCESS'
+		print '   Duration  : ' + cast(datediff(second, @start_time, @end_time) as nvarchar) + ' seconds'
 		-------------------------------------------------------------------------------------
 
 		print '---------------------------------------------------';
 		print 'Loading ERP Tables';
 		print '---------------------------------------------------';
 
+		print '>> [4/6] Loading: bronze.erp_CUST_AZ12'
+		set @start_time = getdate()
 		truncate table bronze.erp_CUST_AZ12;
 		bulk insert bronze.erp_CUST_AZ12
 		from 'C:\Users\Cyber\Downloads\dbc9660c89a3480fa5eb9bae464d6c07\sql-data-warehouse-project\datasets\source_erp\CUST_AZ12.csv'
@@ -151,10 +168,14 @@ as begin
 		Firstrow = 2,
 		fieldterminator = ',',
 		tablock);
-		select count(*) as columns_count from bronze.erp_CUST_AZ12
-
+		set @end_time = getdate()
+		print '   Status    : SUCCESS'
+		print '   Duration  : ' + cast(datediff(second, @start_time, @end_time) as nvarchar) + ' seconds'
 		-----------------------------------------------------------------------------------------
 
+		-- Table 5: erp_LOC_A101
+		print '>> [5/6] Loading: bronze.erp_LOC_A101'
+		set @start_time = getdate()
 		truncate table bronze.erp_LOC_A101;
 		bulk insert bronze.erp_LOC_A101
 		from 'C:\Users\Cyber\Downloads\dbc9660c89a3480fa5eb9bae464d6c07\sql-data-warehouse-project\datasets\source_erp\LOC_A101.csv'
@@ -162,9 +183,14 @@ as begin
 		Firstrow = 2,
 		fieldterminator = ',',
 		tablock);
-		select count(*) as columns_count from bronze.erp_LOC_A101
-
+		set @end_time = getdate()
+		print '   Status    : SUCCESS'
+		print '   Duration  : ' + cast(datediff(second, @start_time, @end_time) as nvarchar) + ' seconds'
 		----------------------------------------------------------------------------------------------
+
+		-- Table 6: erp_PX_CAT_G1V2
+		print '>> [6/6] Loading: bronze.erp_PX_CAT_G1V2'
+		set @start_time = getdate()
 		truncate table bronze.erp_PX_CAT_G1V2;
 		bulk insert bronze.erp_PX_CAT_G1V2
 		from 'C:\Users\Cyber\Downloads\dbc9660c89a3480fa5eb9bae464d6c07\sql-data-warehouse-project\datasets\source_erp\PX_CAT_G1V2.csv'
@@ -172,13 +198,21 @@ as begin
 		Firstrow = 2,
 		fieldterminator = ',',
 		tablock);
-		select count(*) as columns_count from bronze.erp_PX_CAT_G1V2
-		-------------------------------------------------------------------------------------------------
-	set @batch_end_time = getdate ()
-	print '=================================================================================';
-	print 'Loading Bronze is completed';
-	print 'Total Loading time is: ' + cast(datediff (second,@batch_start_time,@batch_end_time) as nvarchar) + 'seconds'; 
-	print '=================================================================================';
+		set @end_time = getdate()
+		print '   Status    : SUCCESS'
+		print '   Duration  : ' + cast(datediff(second, @start_time, @end_time) as nvarchar) + ' seconds'
+
+		-- ============================================================
+		-- BATCH SUMMARY
+		-- ============================================================
+		set @batch_end_time = getdate()
+		print '=========================================================='
+		print 'BRONZE LAYER - FULL LOAD COMPLETED SUCCESSFULLY'
+		print '=========================================================='
+		print '>> Batch End Time    : ' + convert(nvarchar, @batch_end_time, 120)
+		print '>> Total Duration    : ' + cast(datediff(second, @batch_start_time, @batch_end_time) as nvarchar) + ' seconds'
+		print '>> Tables Loaded     : 6 / 6'
+		print '=========================================================='
 	
 	end try
 	begin catch
@@ -186,8 +220,8 @@ as begin
 		print 'Error occured during loading bronze layer'
 		print 'Error Message' + Error_Message();
 		print 'Error Number' + cast(Error_Number() as nvarchar);
-		print 'Error Number' + cast(Error_State() as nvarchar);
+		print 'Error State' + cast(Error_State() as nvarchar);
+		print 'Error Line' + cast(ERROR_LINE() as nvarchar)
 		print '============================================================================='
 	end catch
 end;
-
