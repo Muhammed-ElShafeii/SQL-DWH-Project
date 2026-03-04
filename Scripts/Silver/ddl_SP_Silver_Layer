@@ -145,15 +145,15 @@ as begin
 			end as sls_ship_dt, 
 			case when sls_due_dt = 0 or len(sls_due_dt) !=8 then NULL
 				 else cast(cast(sls_due_dt as varchar) as date)
-			end as sls_due_dt, 
+			end as sls_due_dt,
+			case when sls_sales is null or sls_sales <=0 or sls_sales != sls_quantity * ABS(sls_price) then sls_quantity * abs(sls_price)
+			else sls_sales
+			end as sls_sales,
 			sls_quantity ,
 			case when sls_price is null or sls_price <= 0
 				 then sls_sales / nullif(sls_quantity,0)
 				 else sls_price
-			end as sls_price,
-			case when sls_sales is null or sls_sales <=0 or sls_sales != sls_quantity * ABS(sls_price) then sls_quantity * abs(sls_price)
-				else sls_sales
-			end as sls_sales
+			end as sls_price
 			from bronze.crm_sales_details;
 			set @end_time = getdate ()
 			print '   Status    : SUCCESS'
@@ -238,3 +238,4 @@ as begin
 	end catch 
 end;
 
+exec silver.load_silver
